@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Creating an EC2 instance from CF"
+Parameters: 
+  SSHKey:
+    Description: SSH Key
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: APAC-Key
+Resources: 
+  EC2WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref SSHKey
+      ImageId: ami-05c64f7b4062b0a21
+      InstanceType: t2.micro
+      Tags:
+        - 
+          Key: "Name"
+          Value: "Web Server"
+        - 
+          Key: "Env"
+          Value: "Dev"
+        - 
+          Key: Dep
+          Value: Eng
