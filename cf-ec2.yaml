@@ -5,13 +5,22 @@ Parameters:
     Description: SSH Key
     Type: AWS::EC2::KeyPair::KeyName
     Default: APAC-Key
+  InstanceType:
+    Description: Instace type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t1.micro
+      - t2.nano
+      - t2.micro
+      - t2.small
 Resources: 
   EC2WebServer:
     Type: AWS::EC2::Instance
     Properties:
       KeyName: !Ref SSHKey
       ImageId: ami-05c64f7b4062b0a21
-      InstanceType: t2.micro
+      InstanceType: !Ref InstanceType
       Tags:
         - 
           Key: "Name"
@@ -19,6 +28,3 @@ Resources:
         - 
           Key: "Env"
           Value: "Dev"
-        - 
-          Key: Dep
-          Value: Eng
