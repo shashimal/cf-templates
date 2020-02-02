@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Creating an EC2 instance from CF"
+Parameters: 
+  SSHKey:
+    Description: SSH Key
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: APAC-Key
+  InstanceType:
+    Description: Instace type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t1.micro
+      - t2.nano
+      - t2.micro
+      - t2.small
+Mappings:
+  RegionMap: 
+    us-east-1:
+      HVM64: ami-0ff8a91507f77f867
+      HVMG2: ami-0a584ac55a7631c0c
+    us-west-1:
+      HVM64: ami-0bdb828fd58c52235
+      HVMG2: ami-066ee5fd4a9ef77f1
+    eu-west-1:
+      HVM64: ami-047bb4163c506cd98
+      HVMG2: ami-0a7c483d527806435
+    ap-northeast-1:
+      HVM64: ami-06cd52961ce9f0d85
+      HVMG2: ami-053cdd503598e4a9d
+    ap-southeast-1:
+      HVM64: ami-05c64f7b4062b0a21
+      HVMG2: ami-0be9df32ae9f92309
+Resources: 
+  EC2WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref SSHKey
+      ImageId: !FindInMap
+        - RegionMap
+        - !Ref AWS::Region
+        - HVM64
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - !Ref InstanceSecurityGroupWebserver
+      Tags:
+        - 
+          Key: Name
+          Value: Web Server
+        - 
+          Key: Env
+          Value: Dev
+      UserData: 
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            # Get the latest CloudFormation package
+            yum update -y aws-cfn-bootstrap
+            # Start cfn-init
+            /opt/aws/bin/cfn-init -s ${AWS::StackId} -r EC2WebServer --region ${AWS::Region} || error_exit 'Failed to run cfn-init' 
+    Metadata:
+      Comment: Install a simple Apache HTTP page
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              httpd: []
+          files:
+            "/var/www/html/index.html":
+              content: |
+                <h1>Hello World from EC2 instance!</h1>
+                <p>This was created using cfn-init</p>
+              mode: '000644'
+          commands:
+            hello:
+              command: "echo 'hello world'"
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+  InstanceSecurityGroupWebserver:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: WebSG
+      GroupDescription: WebSG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: WebSG
