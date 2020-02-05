@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "S3 Bucket for hosting a static website"
+Parameters:
+  WebsiteBucketName:
+    Description: "Webstie bucket name"
+    Type: String
+    Default: wildrydes-duleendra
+Resources: 
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: PublicRead
+      BucketName:  !Ref WebsiteBucketName
+      WebsiteConfiguration: 
+        IndexDocument: index.html
+      Tags:
+        - Key: Name
+          Value: WebsiteBucket
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument: 
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
